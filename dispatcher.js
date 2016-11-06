@@ -2,14 +2,36 @@ var http = require('http');
 var url  = require('url');
 var fs   = require('fs');
 var path = require('path');
+var queryString = require('querystring');
 
 // 產生建立server所需的物件
 var serverSampleInit = function(req, res) {
 
-	// 0. 最簡單的回應
-	console.log('init server!');
-	res.writeHead(200, {'Content-Type' : 'text/plain'});
-	res.end('init server!');
+	// 測試url : http://localhost:1337/?id=001&name=Frank&line=16888aaa&id=008
+	// 取得查詢資訊
+	var query = queryString.parse(url.parse(req.url).query);
+	console.log(query);
+	// or
+	query = url.parse(req.url, true).query;
+	console.log(query);
+
+	// 掛載資訊於請求對象
+	req.query = query;
+
+	// 調用業務邏輯處理層
+	(function(req, res) {
+		let query = req.query;
+
+		console.log('id  : ' + query.id);
+		console.log('name: ' + query.name);
+		console.log('line: ' + query.line);
+
+		// 0. 最簡單的回應
+		console.log('init server!');
+		res.writeHead(200, {'Content-Type': 'text/plain'});
+		res.end('init server OK!');
+
+	})(req, res);
 
 }
 
@@ -35,6 +57,9 @@ var serverInitByMethod = function(req, res) {
 			console.log('to GET');
 			// get(req, res);
 	}
+
+	res.writeHead(200);
+	res.end('發送成功！');
 
 }
 
@@ -93,7 +118,7 @@ var serverInitUsingController = function(req, res) {
 	console.log('handles[controller][action] : ' + handles[controller][action]);
 
 	if (handles[controller] && handles[controller][action]) {
-		// 調用對應的業務邏輯並調用
+		// 調用對應的業務邏輯
 		var serviceFunction = handles[controller][action];
 		serviceFunction.apply(null, [req, res].concat(args));
 	} else {
@@ -104,8 +129,8 @@ var serverInitUsingController = function(req, res) {
 }
 
 // 建立server
-// var server = http.createServer(serverInit);
+var server = http.createServer(serverSampleInit);
 // var server = http.createServer(serverInitByMethod);
 // var server = http.createServer(serverInitByURL);
-var server = http.createServer(serverInitUsingController);
+// var server = http.createServer(serverInitUsingController);
 server.listen(1337, '127.0.0.1');
