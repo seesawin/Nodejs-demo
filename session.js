@@ -137,6 +137,71 @@ var session2 = function(req, res) {
 	}
 }
 
+// 異部取得session策略
+var session3 = function(req, res) {
+
+	req.cookies = req.headers.cookie;
+	var id = req.cookies[key];
+	console.log(id)
+
+	if(!id) {
+		console.log('001')
+		req.session = genSession();
+	} else {
+		// 由緩存中取得session
+		store.getSession(id, function(err, session){
+			if(session) {
+						if(session.cookie.expire > (new Date()).getTime()) {
+							session.cookie.expire = (new Date()).getTime() + EXPIRE;
+							req.session = session;
+							console.log('002-1')
+						} else {
+							delete sessions[id];
+							req.session = genSession();
+							console.log('002-3')
+						}
+					} else {
+						req.session = genSession();
+						console.log('003')
+					}
+
+					// 重寫res.writeHead方法
+					var writeHead = res.writeHead;
+					res.writeHead = function() {
+						var cookies = res.getHeader('Set-Cookie');
+						var session = serialize('Set-Cookie', req.session.id);
+
+						console.log(cookies);
+						console.log(session);
+
+						cookies = Array.isArray(cookies) ? cookies.concat(session) : [cookies, session];
+						res.setHeader('Set-Cookie', cookies);
+
+						// 將session保存至緩存中
+						store.save(req.session);
+						
+						return writeHead.apply(this, arguements);
+					}
+
+					// 調用業務邏輯處理層
+					(function(req, res) {
+
+						if(!req.session.isVisit) {
+							req.session.isVisit = true;
+							res.writeHead(200);
+							res.end('Hi 歡迎光臨~');
+						} else {
+							res.writeHead(200);
+							res.end('再次歡迎您！');
+						}
+
+					})(req, res);
+				}
+		}); 
+
+}
+
 // var server = http.createServer(session1);
 var server = http.createServer(session2);
+var server = http.createServer(session3);
 server.listen(1337, '127.0.0.1');
