@@ -1,0 +1,26 @@
+{
+  "name": "seesawin",
+  "version": "1.0.0",
+  "description": "webApp",
+  "main": "cookie.js",
+  "dependencies": {
+    "xml2js": "^0.4.17"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "20161112"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seesawin/node_webApp.git"
+  },
+  "keywords": [
+    "webApp"
+  ],
+  "author": "seesawin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/seesawin/node_webApp/issues"
+  },
+  "homepage": "https://github.com/seesawin/node_webApp#readme"
+}
