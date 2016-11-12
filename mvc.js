@@ -22,7 +22,7 @@ var use = function(path, action) {
 }
 
 // 手工映射
-var serverSampleInit = function(req, res) {
+var serverMVCManual = function(req, res) {
 
 	// 註冊對應
 	use('/pathA', exports.setting);
@@ -40,6 +40,45 @@ var serverSampleInit = function(req, res) {
 	}
 }
 
+
+// 自然映射
+var serverMVCNatural = function(req, res) {
+	if(url.parse(req.url).pathname === '/favicon.ico'){
+        console.log('everything here is ignored');
+    } else {
+		// 測試url :
+		// http://localhost:1337/controller/init/a/b/c
+		// http://localhost:1337/controller/set/a/b/c
+		var pathName   = url.parse(req.url).pathname;
+		var paths      = pathName.split('/');
+		var controller = paths[1] || 'controller';
+		var action     = paths[2] || 'action';
+		var args       = pathName.slice(3);
+		var module;
+
+
+		console.log('pathName : ' + pathName);
+		console.log('paths : ' + paths);
+		console.log('controller : ' + controller + ', action : ' + action + ', args : ' + args);
+
+		try{
+			module = require('./controllers/' + controller);
+			console.log(module);
+		} catch(e) {
+			console.log(e);
+		}
+
+		var method = module[action];
+		console.log(method);
+
+		if(method) {
+			method.apply(null, [req, res].concat(args));
+		}
+    }
+
+}
+
 // 建立server
-var server = http.createServer(serverSampleInit);
+// var server = http.createServer(serverMVCManual);
+var server = http.createServer(serverMVCNatural);
 server.listen(1337, '127.0.0.1');
