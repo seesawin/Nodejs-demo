@@ -32,16 +32,15 @@ var serverMVCManual = function(req, res) {
 	var pathname = url.parse(req.url).pathname;
 	console.log(pathname);
 
-	for(var i = 0; i < routes.length; i++) {
+	for (var i = 0; i < routes.length; i++) {
 		var route = routes[i];
-		if(pathname === route[0]) {
+		if (pathname === route[0]) {
 			var action = route[1];
 			console.log(action);
 			action(req, res);
 		}
 	}
 }
-
 // 產生正則表達式
 // /profile/:username => /profile/jacksontian, /profile/hoover
 // /user.:ext => /user.xml, /user.json
@@ -75,65 +74,64 @@ var useRegrex = function (path, action) {
 // 02 正則批配
 var serverMVCRegrex = function(req, res) {
 
-	if(url.parse(req.url).pathname === '/favicon.ico'){
-        console.log('everything here is ignored');
-    
-    } else {
+	if (url.parse(req.url).pathname === '/favicon.ico') {
+		console.log('everything here is ignored');
+
+	} else {
 		useRegrex('/pathA/:username', exports.setting);
 		useRegrex('/user.:ext', exports.setting);
 
 		var pathname = url.parse(req.url).pathname;
 		console.log(pathname);
 
-		for(var i = 0; i < routes.length; i++) {
+		for (var i = 0; i < routes.length; i++) {
 			var route = routes[i];
 
 			// 測試路徑是否與符合表達式
-			if(route[0].exec(pathname)) {
+			if (route[0].exec(pathname)) {
 				var action = route[1];
 				console.log(action);
 				action(req, res);
 			}
-			
+
 		}
-    }
+	}
 
 }
 
 // 自然映射
 var serverMVCNatural = function(req, res) {
-	if(url.parse(req.url).pathname === '/favicon.ico'){
-        console.log('everything here is ignored');
-    } else {
+	if (url.parse(req.url).pathname === '/favicon.ico') {
+		console.log('everything here is ignored');
+	} else {
 		// 測試url :
 		// http://localhost:1337/controller/init/a/b/c
 		// http://localhost:1337/controller/set/a/b/c
-		var pathName   = url.parse(req.url).pathname;
-		var paths      = pathName.split('/');
+		var pathName = url.parse(req.url).pathname;
+		var paths = pathName.split('/');
 		var controller = paths[1] || 'controller';
-		var action     = paths[2] || 'action';
-		var args       = pathName.slice(3);
+		var action = paths[2] || 'action';
+		var args = pathName.slice(3);
 		var module;
-
 
 		console.log('pathName : ' + pathName);
 		console.log('paths : ' + paths);
 		console.log('controller : ' + controller + ', action : ' + action + ', args : ' + args);
 
-		try{
+		try {
 			module = require('./controllers/' + controller);
 			console.log(module);
-		} catch(e) {
+		} catch (e) {
 			console.log(e);
 		}
 
 		var method = module[action];
 		console.log(method);
 
-		if(method) {
+		if (method) {
 			method.apply(null, [req, res].concat(args));
 		}
-    }
+	}
 
 }
 
