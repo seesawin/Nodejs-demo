@@ -51,16 +51,28 @@ var match = function(pathname, routes) {
 
 var handle = function(req, res, stack) {
 	console.log('**************** handle start ****************');
+	var count = 0;
 
-	var next = function() {
+	var next = function(err) {
+		if(err) {
+			return handle500(err, req, res, stack);
+		}
 		console.log('**************** next() 從stack取出中間件並執行 ****************');
 		// 從stack取出中間件並執行
 		var middleware = stack.shift();
 		console.log(middleware);
 
 		if(middleware) {
-			// 傳入next函數自身，使中間件能夠執行結束後遞迴
-			middleware(req, res, next);
+			try{
+				// if(count == 2) {
+				// 	throw ('something wrong!');
+				// }
+				// 傳入next函數自身，使中間件能夠執行結束後遞迴
+				middleware(req, res, next);
+			} catch(e) {
+				console.log('catch error!');
+				next(e);
+			}
 		}
 	}
 	// 啟動
@@ -89,6 +101,37 @@ var pathRegexp = function(path) {
 	return new RegExp('^' + path + '$');
 }
 
+// 異常處理中間件
+var handle500 = function(err, req, res, stack) {
+	console.log('**************** handle500 start ****************');
+	console.log('001 stack == ' + stack);
+
+	stack = stack.filter(function(middleware) {
+		return middleware.length === 4;
+	});
+
+	console.log('002 stack == ' + stack);
+
+	var next = function() {
+		var middleware = stack.shift();
+		if(middleware) {
+			middleware(err, req, res, next);
+		}
+	}
+	next();
+	console.log('**************** handle500 end ****************');
+}
+
+var handleError = function(err, req, res, stack) {
+	console.log('**************** handleError start ****************');
+	(function(req, res) {
+		console.log('handleError !');
+		res.writeHead(200, {'Content-Type': 'text/plain'});
+		res.end('handleError OK!');
+		console.log('**************** handleError end ****************');
+	})(req, res);
+}
+
 var done = function(req, res) {
 	console.log('**************** done start ****************');
 	(function(req, res) {
@@ -105,6 +148,12 @@ var queryString = function(req, res, next) {
 	req.query = url.parse(req.url, true).query;
 	next();
 	console.log('**************** queryString end ****************');
+}
+
+var session = function(req, res, next) {
+	console.log('**************** session start ****************');
+	next();
+	console.log('**************** session end ****************');
 }
 
 var cookie = function(req, res, next) {
@@ -138,7 +187,9 @@ var serverMiddleware = function(req, res) {
 
 		// 添加MVC對應
 		app.use(queryString);
+		app.use(session);
 		app.use(cookie);
+		// app.use(handleError);
 		app.get('/', done);
 		app.post('/user/:username', done);
 		app.delete('/user/:username', done);
